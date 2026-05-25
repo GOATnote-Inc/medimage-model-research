@@ -1,0 +1,5 @@
+* @bGOATnote
+/.github/ @bGOATnote
+/scripts/nc_acknowledge.py @bGOATnote
+/scripts/nc_boundary_check.py @bGOATnote
+/src/medimage_model_research/data/ @bGOATnote

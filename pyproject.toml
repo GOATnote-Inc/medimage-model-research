@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "medimage-model-research"
+version = "0.1.0.dev0"
+description = "Research-track brain-MR multimodal reasoning model (MR-RATE / CT-RATE)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "GOATnote Autonomous Research Inc." }]
+keywords = ["medical-imaging", "brain-mri", "research", "vision-language"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+  "pydantic>=2.5",
+  "click>=8.1",
+  "numpy>=1.26",
+  "medimage-eval @ git+https://github.com/GOATnote-Inc/medimage-eval.git@main",
+]
+
+[project.optional-dependencies]
+data = [
+  "huggingface_hub>=0.24",
+  "datasets>=2.20",
+  "nibabel>=5.2",
+]
+train = [
+  "torch>=2.4",
+  "transformers>=4.44",
+  "peft>=0.12",
+  "monai>=1.4",
+  "accelerate>=0.34",
+]
+dev = [
+  "pytest>=7.4",
+  "pytest-cov>=4.1",
+  "ruff>=0.5",
+  "bandit>=1.7",
+  "pre-commit>=3.7",
+]
+
+[project.scripts]
+medimage-model-research = "medimage_model_research.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/GOATnote-Inc/medimage-model-research"
+Issues = "https://github.com/GOATnote-Inc/medimage-model-research/issues"
+"Commercial track" = "https://github.com/GOATnote-Inc/medimage-model"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["docs", "build", "dist", "data", "checkpoints", "wandb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S", "E501"]
+"scripts/**/*.py" = ["S603", "S607"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+markers = [
+  "gpu: requires a GPU",
+  "integration: requires external services",
+]
