@@ -57,7 +57,7 @@ def write_ack() -> int:
         json.dumps(
             {
                 "user": os.environ.get("USER", "unknown"),
-                "timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+                "timestamp_utc": dt.datetime.now(dt.UTC).isoformat(),
                 "terms_sha256": _terms_hash(),
                 "version": 1,
             },

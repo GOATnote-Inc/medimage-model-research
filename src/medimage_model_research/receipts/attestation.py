@@ -13,7 +13,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 
@@ -109,6 +109,6 @@ def make_attestation(
         eval_results_sha256=eval_results_sha256,
         judge_versions=judge_versions,
         seed=seed,
-        created_at_utc=dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        created_at_utc=dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
         notes=notes,
     )
