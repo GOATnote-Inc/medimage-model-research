@@ -13,8 +13,28 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+# Matches a standalone "NC" token (CC BY-NC-SA, CC-BY-NC-4.0, "NC"), spelled-out
+# non-commercial in any casing/spacing, and research/academic-restricted terms.
+# Over-matching is acceptable: a false positive marks weights research-only,
+# which is the safe direction.
+_NC_PATTERN = re.compile(
+    r"(?:^|[^a-z0-9])nc(?:[^a-z0-9]|$)|non[\s-]?commercial|research|academic",
+    re.IGNORECASE,
+)
+
+
+def license_implies_nc(license_text: str) -> bool:
+    """True when a license string indicates a non-commercial/research restriction.
+
+    Normalised, case-insensitive matching. "CC BY-NC-SA 4.0", "non-commercial",
+    "NonCommercial", "research-only", and "academic use" all return True;
+    "CC-BY-4.0" and "Apache-2.0" return False.
+    """
+    return bool(_NC_PATTERN.search(license_text))
 
 
 @dataclass(frozen=True)
@@ -82,15 +102,28 @@ def make_attestation(
     seed: int,
     providers: tuple[str, ...] = ("Forithmus", "UZH", "Medipol", "NVIDIA"),
     licenses: tuple[str, ...] = ("CC-BY-NC-SA-4.0",),
+    commercial_use: bool | None = None,
     notes: str = "",
 ) -> Attestation:
     """Build an Attestation from explicit fields + an access-log path.
 
-    The NC obligation is set to True whenever any input license matches the
-    forbidden-commercial set. This is the field downstream consumers MUST check.
+    ``nc_obligation`` is the field downstream consumers MUST check, and it is
+    computed fail-closed:
+
+    * ``commercial_use=False`` (caller knows the terms forbid commercial use)
+      forces True.
+    * Any license string matching a non-commercial/research marker
+      (see ``license_implies_nc``) forces True — even when the caller passed
+      ``commercial_use=True``; the recorded terms win over the caller's claim.
+    * An empty ``licenses`` tuple forces True: no recorded license information
+      is never grounds for treating weights as commercial-OK.
+    * Only ``commercial_use=True`` (or None) with non-empty, cleanly
+      permissive license strings yields False.
     """
     access_log_hash, n_records = hash_access_log(access_log)
-    nc_obligation = any("NC" in lic for lic in licenses)
+    nc_obligation = (
+        commercial_use is False or not licenses or any(license_implies_nc(lic) for lic in licenses)
+    )
     provenance = TrainingDataProvenance(
         access_log_sha256=access_log_hash,
         access_log_path=str(access_log),

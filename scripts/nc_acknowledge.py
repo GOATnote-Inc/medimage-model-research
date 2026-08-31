@@ -18,30 +18,18 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import hashlib
 import json
 import os
 import sys
 from pathlib import Path
 
-NC_TERMS_TEXT = """\
-I acknowledge that:
-
-1. MR-RATE and CT-RATE are licensed under CC BY-NC-SA 4.0.
-2. Any model weights trained in this repository may inherit the
-   non-commercial constraint from the training data.
-3. I will not redistribute the datasets or use derived models for
-   commercial purposes without separate agreements with the dataset
-   providers (Forithmus and co-licensors).
-4. Outputs from these models will be marked research-only in any
-   downstream artifact.
-"""
+from medimage_model_research.nc_terms import NC_TERMS_TEXT, terms_hash
 
 ACK_PATH = Path.home() / ".medimage-research" / "nc_ack.json"
 
 
 def _terms_hash() -> str:
-    return hashlib.sha256(NC_TERMS_TEXT.encode("utf-8")).hexdigest()
+    return terms_hash()
 
 
 def write_ack() -> int:
