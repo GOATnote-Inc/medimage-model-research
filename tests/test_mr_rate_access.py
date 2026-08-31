@@ -16,21 +16,57 @@ from medimage_model_research.data.mr_rate import (
     HuggingFaceTokenMissingError,
     MRRateAccessRecord,
     MRRateLoaderConfig,
+    NCAcknowledgementInvalidError,
     NCAcknowledgementMissingError,
     preflight,
     record_access,
 )
+from medimage_model_research.nc_terms import terms_hash
 
 
-def _cfg(tmp_path: Path, ack_present: bool = True) -> MRRateLoaderConfig:
+def _cfg(
+    tmp_path: Path, ack_present: bool = True, ack_body: str | None = None
+) -> MRRateLoaderConfig:
     ack_path = tmp_path / "nc_ack.json"
     if ack_present:
-        ack_path.write_text('{"version": 1}')
+        if ack_body is None:
+            ack_body = json.dumps({"version": 1, "terms_sha256": terms_hash()})
+        ack_path.write_text(ack_body)
     return MRRateLoaderConfig(
         local_root=tmp_path / "mr_rate",
         access_log=tmp_path / "access.jsonl",
         nc_ack_path=ack_path,
     )
+
+
+def test_preflight_refuses_ack_without_terms_hash(tmp_path, monkeypatch):
+    """An acknowledgement file that never recorded the terms hash is invalid.
+
+    This pins the fail-closed fix: previously `{"version": 1}` (or an empty
+    file) satisfied the gate because only existence was checked.
+    """
+    monkeypatch.setenv("HF_TOKEN", "hf_fake_token_12345")
+    cfg = _cfg(tmp_path, ack_present=True, ack_body='{"version": 1}')
+    with pytest.raises(NCAcknowledgementInvalidError):
+        preflight(cfg)
+
+
+def test_preflight_refuses_ack_with_stale_terms_hash(tmp_path, monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "hf_fake_token_12345")
+    cfg = _cfg(
+        tmp_path,
+        ack_present=True,
+        ack_body=json.dumps({"version": 1, "terms_sha256": "0" * 64}),
+    )
+    with pytest.raises(NCAcknowledgementInvalidError):
+        preflight(cfg)
+
+
+def test_preflight_refuses_unreadable_ack(tmp_path, monkeypatch):
+    monkeypatch.setenv("HF_TOKEN", "hf_fake_token_12345")
+    cfg = _cfg(tmp_path, ack_present=True, ack_body="not json {")
+    with pytest.raises(NCAcknowledgementInvalidError):
+        preflight(cfg)
 
 
 def test_preflight_refuses_without_nc_ack(tmp_path, monkeypatch):

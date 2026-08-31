@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "medimage-model-research"
 version = "0.1.0.dev0"
-description = "Research-track brain-MR multimodal reasoning model (MR-RATE / CT-RATE)"
+description = "NC-track scaffold for a planned research brain-MR model (no weights or training code yet)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Apache-2.0" }
@@ -21,10 +21,14 @@ dependencies = [
   "pydantic>=2.5",
   "click>=8.1",
   "numpy>=1.26",
-  "medimage-eval @ git+https://github.com/GOATnote-Inc/medimage-eval.git@main",
 ]
 
 [project.optional-dependencies]
+eval = [
+  # Not yet consumed by any code here; pinned so a push to the substrate's
+  # main can never change this repo's build. Bump the tag deliberately.
+  "medimage-eval @ git+https://github.com/GOATnote-Inc/medimage-eval.git@v0.1.0.dev0",
+]
 data = [
   "huggingface_hub>=0.24",
   "datasets>=2.20",

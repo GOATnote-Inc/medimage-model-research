@@ -1,4 +1,4 @@
-.PHONY: help venv install lint test smoke nc-ack preflight train serve clean
+.PHONY: help venv install lint test smoke nc-ack preflight clean
 
 PY ?= python3.12
 VENV := .venv
@@ -12,8 +12,6 @@ help:
 	@echo "  smoke      package-import smoke"
 	@echo "  nc-ack     record the NC acknowledgement opt-in for this user"
 	@echo "  preflight  verify NC acknowledgement is on file"
-	@echo "  train      kick training (GPU)"
-	@echo "  serve      stand up inference server (GPU)"
 
 venv:
 	$(PY) -m venv $(VENV)
@@ -38,12 +36,6 @@ nc-ack:
 
 preflight:
 	$(VENV)/bin/python scripts/nc_acknowledge.py --check
-
-train:
-	$(VENV)/bin/python -m medimage_model_research.training.entry
-
-serve:
-	$(VENV)/bin/python -m medimage_model_research.serving.entry
 
 clean:
 	rm -rf $(VENV) build dist *.egg-info .pytest_cache .ruff_cache .coverage htmlcov

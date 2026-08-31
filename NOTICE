@@ -1,0 +1,10 @@
+medimage-model-research
+Copyright 2026 GOATnote Autonomous Research Inc.
+
+The CODE in this repository is licensed under the Apache License 2.0.
+
+IMPORTANT: Trained model weights published from this repository are
+constrained by their training data licenses (notably MR-RATE / CT-RATE,
+CC BY-NC-SA 4.0). Weights are research-only and not licensed for
+commercial use without separate contracts with the data providers
+(Forithmus and co-licensors). See docs/LICENSE_MAP.md.

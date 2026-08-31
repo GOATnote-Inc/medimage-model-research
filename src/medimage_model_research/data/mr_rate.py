@@ -18,9 +18,16 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from medimage_model_research.nc_terms import terms_hash
+
 
 class NCAcknowledgementMissingError(RuntimeError):
     """Raised when the NC acknowledgement opt-in is not on file."""
+
+
+class NCAcknowledgementInvalidError(NCAcknowledgementMissingError):
+    """Raised when the acknowledgement exists but is unreadable or was recorded
+    against different terms (terms_sha256 mismatch). Re-run the opt-in."""
 
 
 class HuggingFaceTokenMissingError(RuntimeError):
@@ -60,6 +67,18 @@ def _check_nc_ack(path: Path) -> None:
     if not path.exists():
         raise NCAcknowledgementMissingError(
             f"NC acknowledgement missing at {path}. Run `make nc-ack` first."
+        )
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise NCAcknowledgementInvalidError(
+            f"NC acknowledgement at {path} is unreadable ({exc}). Re-run `make nc-ack`."
+        ) from exc
+    recorded = data.get("terms_sha256")
+    if recorded != terms_hash():
+        raise NCAcknowledgementInvalidError(
+            f"NC acknowledgement at {path} was recorded against different terms "
+            "(terms_sha256 mismatch). Re-run `make nc-ack` to re-acknowledge."
         )
 
 

@@ -7,8 +7,70 @@ import json
 
 from medimage_model_research.receipts.attestation import (
     hash_access_log,
+    license_implies_nc,
     make_attestation,
 )
+
+
+def test_license_implies_nc_catches_spelled_out_variants():
+    """Regression: the old check was `"NC" in lic` (uppercase substring) and
+    returned False for every one of these."""
+    for lic in (
+        "CC BY-NC-SA 4.0",
+        "non-commercial",
+        "NonCommercial",
+        "Non-Commercial custom",
+        "research-only",
+        "Stanford Research Use Agreement (non-commercial)",
+        "Academic use only",
+        "CC-BY-NC-4.0",
+    ):
+        assert license_implies_nc(lic) is True, lic
+
+
+def test_license_implies_nc_false_for_permissive():
+    for lic in ("CC-BY-4.0", "CC0-1.0", "Apache-2.0", "MIT", "BSD-3-Clause"):
+        assert license_implies_nc(lic) is False, lic
+
+
+def _mk(tmp_path, **overrides):
+    kwargs = dict(
+        artifact_kind="checkpoint",
+        artifact_id="vX.Y.0-step42",
+        code_commit="deadbeef",
+        config_sha256="c" * 64,
+        access_log=tmp_path / "missing.jsonl",
+        eval_results_sha256="e" * 64,
+        judge_versions=("claude-opus-4-7", "gpt-5.4"),
+        seed=42,
+    )
+    kwargs.update(overrides)
+    return make_attestation(**kwargs)
+
+
+def test_nc_obligation_true_for_spelled_out_license(tmp_path):
+    att = _mk(tmp_path, licenses=("Stanford Research Use Agreement (non-commercial)",))
+    assert att.training_data.nc_obligation is True
+
+
+def test_nc_obligation_forced_by_commercial_use_false(tmp_path):
+    att = _mk(tmp_path, licenses=("Apache-2.0",), commercial_use=False)
+    assert att.training_data.nc_obligation is True
+
+
+def test_nc_obligation_true_when_no_license_recorded(tmp_path):
+    att = _mk(tmp_path, licenses=(), commercial_use=None)
+    assert att.training_data.nc_obligation is True
+
+
+def test_nc_obligation_license_text_wins_over_commercial_use_claim(tmp_path):
+    att = _mk(tmp_path, licenses=("CC BY-NC-SA 4.0",), commercial_use=True)
+    assert att.training_data.nc_obligation is True
+
+
+def test_nc_obligation_false_for_permissive_with_commercial_use(tmp_path):
+    att = _mk(tmp_path, licenses=("CC-BY-4.0", "Apache-2.0"), commercial_use=True)
+    assert att.training_data.nc_obligation is False
 
 
 def test_hash_access_log_empty(tmp_path):

@@ -1,1 +1,1 @@
-"""SFT + GRPO. Reuses the healthcraft RL coupling."""
+"""SFT + GRPO training (planned; no code yet)."""
