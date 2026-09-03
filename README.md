@@ -2,6 +2,9 @@
 
 **NC-track scaffold for a planned research brain-MR multimodal model. No weights, no training code, and no dataset manifests exist here yet.**
 
+
+> **Maintenance status (2026-09):** passive. This repository is kept available as a reference implementation; CI runs on pushes and pull requests only, Dependabot security alerts remain enabled, and no scheduled jobs or hosted services consume ongoing resources. No active development is planned.
+
 The NC-constrained sibling of [`medimage-model`](https://github.com/GOATnote-Inc/medimage-model). The plan: same architecture and the same [`medimage-eval`](https://github.com/GOATnote-Inc/medimage-eval) substrate, but ingesting CC BY-NC-SA training corpora (MR-RATE, CT-RATE). Weights eventually trained here would be **research-only** — commercial use requires separate contracts with the data providers (Forithmus and co-licensors).
 
 > Status: pre-v0.1 scaffold. See `docs/LICENSE_MAP.md` for the constraint chain and `STATUS.md` for the dated state.
